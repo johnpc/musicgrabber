@@ -1,3 +1,5 @@
+> **Fork notice:** this is [johnpc/musicgrabber](https://github.com/johnpc/musicgrabber), a fork of [dbv111m/musicgrabber](https://github.com/dbv111m/musicgrabber) carrying strict artist matching for album/bulk/watched downloads ([upstream PR #11](https://github.com/dbv111m/musicgrabber/pull/11)). Docker image: `mrorbitman/musicgrabber` (`:latest`, `:johnpc`, `:sha-<short>`), published by `.github/workflows/docker-publish.yml`. Everything else is upstream.
+
 # Music Grabber
 **v4.3.1 (2026-10-08)**
 

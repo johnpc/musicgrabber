@@ -1,0 +1,60 @@
+name: Publish Docker image
+
+# Builds the johnpc fork of MusicGrabber (strict artist matching) and pushes it
+# to Docker Hub as mrorbitman/musicgrabber. Runs on every push to the johnpc
+# branch and on version tags; pull requests only build, to prove the Dockerfile.
+
+on:
+  push:
+    branches: [johnpc]
+    tags: ["v*"]
+  pull_request:
+    branches: [johnpc]
+  workflow_dispatch:
+
+env:
+  IMAGE: mrorbitman/musicgrabber
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (arm64 cross-build)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/johnpc' }}
+            type=raw,value=johnpc,enable=${{ github.ref == 'refs/heads/johnpc' }}
+            type=sha,prefix=sha-,format=short
+            type=ref,event=tag
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
